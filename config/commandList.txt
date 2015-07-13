@@ -1,0 +1,6 @@
+sh ver
+sh start
+sh vtp status
+sh vtp password
+sh vlan
+dir flash:

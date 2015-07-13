@@ -1,0 +1,6 @@
+sh ver
+sh start
+sh run
+sh vlan
+sh route
+dir /all

@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'highline'
+
+require_relative '../lib/ciscoconnect.rb'
+require_relative '../lib/configfiles.rb'
+require_relative '../lib/putridgit.rb'
+require_relative '../lib/logging.rb'
+require_relative '../lib/mail.rb'
+
+module Putrid
+  include Logging
+  basePath = File.expand_path File.dirname(__FILE__) + '/../'
+  configPath = basePath + '/config/'
+  logPath = basePath + '/log/'
+
+  [configPath, logPath].each do |path|
+    Dir::mkdir(path) unless File.exists? path
+  end
+
+  FileUtils.rm("/tmp/putrid.diff") if File.exists? "/tmp/putrid.diff"
+
+  FileUtils.rm Dir.glob("#{logPath}/*.log")
+
+  username = "putrid_username"
+  password = "putrid_password"
+
+  ConfigFiles.new(configPath + 'switchList.txt') do |switch|
+    begin
+      device_log_path = logPath + "/#{switch}/"
+      Dir::mkdir(device_log_path)
+
+      tn = CiscoConnect.new(switch, username, password)
+
+      ConfigFiles.new(configPath + "#{tn.platform}_commands.txt") do |command|
+        Logging.out = (device_log_path + command + ".txt")
+        tn.conn_command(command)
+        Logging.logger = nil
+      end
+
+    rescue Exception => e
+
+    end
+  end
+
+  Logging.out=(logPath + "git.log")
+  g = PutridGit.new(basePath)
+  g.atomic_operation
+
+  File.open('/tmp/putrid.diff', 'r') do |diff_text|
+    Mail.new(diff_text) { |m| m.send_email }
+  end
+
+end

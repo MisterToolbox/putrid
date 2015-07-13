@@ -1,0 +1,11 @@
+sh ver
+sh start
+sh run
+sh vtp status
+sh vtp password
+sh vlan
+sh ip route
+sh cdp neigh
+sh span summ
+sh mac add
+dir bootflash:
